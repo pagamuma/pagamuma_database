@@ -1,6 +1,8 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 0001 — THE BASE: people, clinics, children, schedule, daily notes, chat
 --
+-- dev & prod: "apliquei"
+--
 -- Privacy frame: the Philippine Data Privacy Act of 2012 (RA 10173). Daily
 -- notes and demographics of minors are SENSITIVE PERSONAL INFORMATION, so:
 --   · every table has RLS, and every policy is scoped to a clinic the user
@@ -609,6 +611,20 @@ revoke all on function public.find_user(uuid, text) from public, anon;
 revoke all on function public.create_client(uuid, text, text, date, text, text) from public, anon;
 revoke all on function public.log_client_view(uuid) from public, anon;
 revoke all on function public.my_threads(uuid) from public, anon;
+-- ⚠️ THE HELPERS THE POLICIES CALL, GRANTED BY NAME. The policies run as the
+-- querying role, so `authenticated` needs EXECUTE on every function they call.
+-- With "Automatically expose new tables" off, Supabase may not grant it by
+-- default, and then every query fails with "permission denied for function".
+-- Written out, it works whatever the project setting is.
+grant execute on function public.clinic_active(uuid) to authenticated;
+grant execute on function public.has_role(uuid, text[]) to authenticated;
+grant execute on function public.is_therapist_of(uuid) to authenticated;
+grant execute on function public.is_guardian_of(uuid) to authenticated;
+grant execute on function public.is_manager_of_client(uuid) to authenticated;
+grant execute on function public.can_see_client(uuid) to authenticated;
+grant execute on function public.can_care_for(uuid) to authenticated;
+grant execute on function public.can_see_profile(uuid) to authenticated;
+
 grant execute on function public.username_available(text) to anon, authenticated;
 grant execute on function public.find_user(uuid, text) to authenticated;
 grant execute on function public.create_client(uuid, text, text, date, text, text) to authenticated;
